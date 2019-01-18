@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Dumb\\Swoole":"src/swoole"
+            "Swoole\\":"src/swoole"
         }
     }
 }
