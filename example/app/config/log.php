@@ -7,10 +7,7 @@
  */
 return [
     "master" => [
-        "enable_cache" => false,
-        "type"  => getenv('APP_LOG_TYPE') ? getenv('APP_LOG_TYPE') : 'FileLog',
-        "dir"   => getenv('APP_LOG_PATH') ? getenv('APP_LOG_PATH')
-            : '/data/release/sharing-notice-alert/storage/logs',
+        "type"  => 'EchoLog',
         "date"  => true,
         "leave" => \Swoole\Log::INFO
     ]

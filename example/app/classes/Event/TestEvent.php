@@ -11,6 +11,7 @@ class TestEvent implements \Swoole\IFace\EventHandler
 {
     public function trigger($type, $data)
     {
-        var_dump($data);
+        global $php;
+        $php->log->put(serialize($data));
     }
 }
