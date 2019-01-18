@@ -1,0 +1,21 @@
+{
+    "name": "dumb-sky/swoole",
+    "description": "sw framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "dumb.luo",
+            "email": "luojinbio07031618@yeah.net"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Dumb\\Swoole":"src/swoole"
+        }
+    }
+}

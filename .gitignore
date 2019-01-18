@@ -1,0 +1,4 @@
+/vendor/
+commposer.local
+*.iml
+.idea/
