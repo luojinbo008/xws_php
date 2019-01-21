@@ -181,8 +181,9 @@ class Server
             }
         } else {
             usage:
-            $kit->specs->printOptions("php {$argv[0]} start|stop|reload");
-            exit;
+            echo ("php {$argv[0]} start|stop|reload\n");
+            $kit->specs->printOptions();
+            exit("\n");
         }
         self::$options = $opt;
         $startFunction($opt);
