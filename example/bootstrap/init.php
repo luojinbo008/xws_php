@@ -9,8 +9,6 @@ if (PHP_OS == 'WINNT') {
     die("windows system not access this server！");
 }
 
-define("LIBPATH", __DIR__);
-
 global $php;
 
 $php = Swoole\Swoole::getInstance();

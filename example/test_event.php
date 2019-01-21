@@ -14,7 +14,7 @@ define('ROOT_PATH', realpath(__DIR__ . '/..'));
 $loader = require_once ROOT_PATH . "/vendor/autoload.php";
 $loader->setPsr4("App\\", APPPATH . "/classes");
 
-require dirname(__DIR__) . '/src/init.php';
+require dirname(__DIR__) . '/example/bootstrap/init.php';
 
 go(function () {
     global $php;

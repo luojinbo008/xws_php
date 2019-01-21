@@ -77,7 +77,7 @@ class Swoole
                 $object = require $user_factory_file;
             } else {
                 // 系统默认
-                get_factory_file: $system_factory_file = LIBPATH . '/factory/' . $module . '.php';
+                get_factory_file: $system_factory_file = __DIR__ . "/../factory/" . $module . '.php';
                 // 组件不存在，抛出异常
                 if (!is_file($system_factory_file)) {
                     throw new NotFound("module [$module] not found.");

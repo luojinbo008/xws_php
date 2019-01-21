@@ -11,7 +11,7 @@ define('APPPATH', realpath(__DIR__ . '/app'));
 define('ROOT_PATH', realpath(__DIR__ . '/..'));
 
 $loader = require_once ROOT_PATH . "/vendor/autoload.php";
-require dirname(__DIR__) . '/src/init.php';
+require dirname(__DIR__) . '/example/bootstrap/init.php';
 
 Swoole\Config::$debug = false;
 
