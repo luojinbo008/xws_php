@@ -10,6 +10,7 @@ namespace Swoole\Protocol\Adapter;
 
 use Swoole\Common\Route;
 use Swoole\Protocol\Request;
+use Swoole\Protocol\Response;
 
 class HttpServer extends Base implements \Swoole\IFace\Protocol
 {
@@ -137,11 +138,8 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
         $pathInfo = $request->server['request_uri'];
         $params = [];
         try {
-            ob_start();
             $projectConfig = \Swoole\Swoole::$php->config['project'];
-
             $ctrlName = $projectConfig['default_ctrl_name'] ?? 'IndexController';
-
             $methodName = $projectConfig['default_method_name'] ?? 'index';
 
             if (!empty($pathInfo) && '/' !== $pathInfo) {
@@ -156,13 +154,10 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
                     }
                 }
             }
-
             Request::init($ctrlName, $methodName, $params);
+            Response::setResponse($response);
 
             $view = \Swoole\Core\Route::route();
-
-
-            ob_end_clean();
             $response->status(200);
             $response->end($view);
         } catch (\Exception $e) {

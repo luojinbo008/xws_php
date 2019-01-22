@@ -8,6 +8,8 @@
 
 namespace Swoole\Network;
 
+use Swoole\Protocol\Request;
+
 class Server
 {
     public $protocol;
@@ -386,6 +388,7 @@ class Server
 
         if ($protocol instanceof \Swoole\Protocol\Adapter\HttpServer) {
             self::$isHttp = true;
+            Request::setHttpServer(1);
         }
         $this->protocol = $protocol;
         $protocol->server = $this;
