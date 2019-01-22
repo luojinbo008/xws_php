@@ -11,6 +11,8 @@ define('APPPATH', realpath(__DIR__ . '/app'));
 define('ROOT_PATH', realpath(__DIR__ . '/..'));
 
 $loader = require_once ROOT_PATH . "/vendor/autoload.php";
+$loader->setPsr4("App\\", APPPATH . "/classes");
+
 require dirname(__DIR__) . '/example/bootstrap/init.php';
 
 Swoole\Config::$debug = false;
@@ -25,12 +27,10 @@ Swoole\Network\Server::setPidFile(__DIR__ . '/http_svr.pid');
  */
 Swoole\Network\Server::start(function () {
 
-    $AppSvr = new Swoole\Protocol\HttpServer([
 
-    ]);
+    $AppSvr = Swoole\Protocol\Factory::getInstance("HttpServer");
 
-    $AppSvr->setLogger(new Swoole\Log\EchoLog(true)); // Logger
-    $AppSvr->setDocumentRoot(APPPATH . '/webroot');
+    $AppSvr->setLogger(new Swoole\Log\EchoLog(true)); // Loggers
     $server = Swoole\Network\Server::autoCreate('0.0.0.0', 8888);
     $server->setProtocol($AppSvr);
 

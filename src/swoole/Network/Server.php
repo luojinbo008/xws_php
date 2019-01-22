@@ -8,8 +8,6 @@
 
 namespace Swoole\Network;
 
-use Swoole\Protocol\HttpServer;
-
 class Server
 {
     public $protocol;
@@ -386,7 +384,7 @@ class Server
             throw new \Exception("The protocol is not instanceof \\Swoole\\IFace\\Protocol");
         }
 
-        if ($protocol instanceof HttpServer) {
+        if ($protocol instanceof \Swoole\Protocol\Adapter\HttpServer) {
             self::$isHttp = true;
         }
         $this->protocol = $protocol;
