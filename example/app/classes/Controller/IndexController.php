@@ -16,7 +16,11 @@ class IndexController implements \Swoole\IFace\Controller
      */
     public function index()
     {
-        return 123;
+        return [
+            "em" => "Hello World!",
+            "data" => [
+            ]
+        ];
     }
 
     public function _after()

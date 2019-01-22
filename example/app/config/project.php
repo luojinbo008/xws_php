@@ -7,5 +7,6 @@
  */
 
 return [
-    "ctrl" => "\\App\\Controller"
+    "ctrl" => "\\App\\Controller",
+    "view_mode" => "Php"
 ];
