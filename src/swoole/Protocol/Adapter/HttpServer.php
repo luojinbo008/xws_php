@@ -6,8 +6,10 @@
  * Time: 12:03
  */
 
-namespace Swoole\Protocol;
+namespace Swoole\Protocol\Adapter;
 
+use Swoole\Common\Route;
+use Swoole\Protocol\Request;
 
 class HttpServer extends Base implements \Swoole\IFace\Protocol
 {
@@ -15,8 +17,6 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
 
     protected $requests;
     protected $swoole_server;
-
-    protected $document_root;
 
     /**
      * HttpServer constructor.
@@ -42,11 +42,6 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
 
         set_error_handler([$this, 'onErrorHandle'], E_USER_ERROR);
         register_shutdown_function([$this, 'onErrorShutDown']);
-    }
-
-    public function setDocumentRoot($path)
-    {
-        $this->document_root = $path;
     }
 
     /**
@@ -139,44 +134,42 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
     public function onRequest(\Swoole\Http\Request $request, \Swoole\Http\Response $response)
     {
         // 请求路径
-        if ($request->server['request_uri'][strlen($request->server['request_uri']) - 1] == '/') {
-            $request->server['request_uri'] .= $this->config['request']['default_page'] ?? 'default';
-        }
+        $pathInfo = $request->server['request_uri'];
+        $params = [];
+        try {
+            ob_start();
+            $projectConfig = \Swoole\Swoole::$php->config['project'];
 
-        $path = $this->document_root . $request->server['request_uri'];
+            $ctrlName = $projectConfig['default_ctrl_name'] ?? 'IndexController';
 
-        $len = strrpos($path, '.');
-        if ($len) {
-            $path = substr($path, 0, strrpos($path, '.'));
-        }
+            $methodName = $projectConfig['default_method_name'] ?? 'index';
 
-        $path .= '.php';
+            if (!empty($pathInfo) && '/' !== $pathInfo) {
+                $routeMap = Route::match(\Swoole\Swoole::$php->config['route'] ?? false, $pathInfo);
 
-
-        // 目前json 格式
-        $response->header('Content-type', 'application/json');
-
-        if (is_file($path)) {
-            try {
-                ob_start();
-
-                $data = include $path;
-
-                ob_end_clean();
-                if (!is_array($data)) {
-                    throw new \Exception("server response err");
+                if (is_array($routeMap)) {
+                    $ctrlName = \str_replace('/', '\\', $routeMap[0]);
+                    $methodName = $routeMap[1];
+                    if (!empty($routeMap[2]) && is_array($routeMap[2])) {
+                        // 数优先
+                        $params = $params + $routeMap[2];
+                    }
                 }
-
-                $response->status(200);
-                $response->end(json_encode($data, true));
-            } catch (\Exception $e) {
-                $response->status(500);
-                $response->end($e->getMessage());
             }
-        } else {
-            $response->status(404);
-            $response->end('Not Found');
+
+            Request::init($ctrlName, $methodName, $params);
+
+            $view = \Swoole\Core\Route::route();
+
+
+            ob_end_clean();
+            $response->status(200);
+            $response->end($view);
+        } catch (\Exception $e) {
+            $response->status(500);
+            $response->end($e->getMessage());
         }
+
         $this->server->close($request->fd);
     }
 
@@ -189,7 +182,7 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
      */
     public function onTask(\swoole_server $serv, $task_id, $from_id, $data)
     {
-        $this->log("task start" );
+        $this->log("task start");
         return call_user_func_array($data['func'], $data['data']);
     }
 

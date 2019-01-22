@@ -3,9 +3,11 @@
  * Created by IntelliJ IDEA.
  * User: luojinbo
  * Date: 2019-01-21
- * Time: 13:32
+ * Time: 19:21
  */
 
 return [
-    "msg" => "hello world!"
+    'static' => [
+        "/push/sendfile" => "push/sendFile"
+    ],
 ];
