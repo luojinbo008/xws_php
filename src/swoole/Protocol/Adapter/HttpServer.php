@@ -155,6 +155,7 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
                 }
             }
             Request::init($ctrlName, $methodName, $params);
+            Request::setRequest($request);
             Response::setResponse($response);
 
             $view = \Swoole\Core\Route::route();
