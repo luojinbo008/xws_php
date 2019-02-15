@@ -6,7 +6,7 @@
  * Time: 20:30
  */
 
-namespace Swoole;
+namespace Swoole\Core;
 
 class Console
 {

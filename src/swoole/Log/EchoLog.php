@@ -9,7 +9,7 @@
 namespace Swoole\Log;
 
 
-class EchoLog extends \Swoole\Log implements \Swoole\IFace\Log
+class EchoLog extends \Swoole\Core\Log implements \Swoole\IFace\Log
 {
     protected $display = true;
 

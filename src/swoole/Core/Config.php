@@ -6,7 +6,7 @@
  * Time: 11:11
  */
 
-namespace Swoole;
+namespace Swoole\Core;
 
 class Config extends \ArrayObject
 {

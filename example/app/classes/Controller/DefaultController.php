@@ -7,19 +7,18 @@
  */
 namespace App\Controller;
 
-class IndexController implements \Swoole\IFace\Controller
+class DefaultController implements \Swoole\IFace\Controller
 {
-
     /**
-     * 测试
-     * @return int
+     * 404 notFound
+     * @return array
      */
-    public function index()
+    public function notFound()
     {
         return [
-            "em" => "Hello World!",
-            "data" => [
-            ]
+            "code" => "404",
+            "message" => "Not Found",
+            "data" => []
         ];
     }
 

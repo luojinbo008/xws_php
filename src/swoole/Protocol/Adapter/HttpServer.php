@@ -35,7 +35,7 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
     public function onStart($serv, $worker_id = 0)
     {
         if (isset($this->config['server']['user'])) {
-            \Swoole\Console::changeUser($this->config['server']['user']);
+            \Swoole\Core\Console::changeUser($this->config['server']['user']);
         }
 
         $this->swoole_server = $serv;
@@ -68,7 +68,10 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
      */
     public function onConnect($serv, $client_id, $from_id)
     {
-        $this->log("Event: client[#$client_id@$from_id] connect");
+        $clientInfo = $serv->getClientInfo($client_id);
+        $logInfo = sprintf("client_ip[#%s:%s] client[#%s@%s] connect", $clientInfo['remote_ip'],
+            $clientInfo['remote_port'], $client_id, $from_id);
+        $this->log($logInfo);
     }
 
     /**
@@ -78,7 +81,10 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
      */
     public function onClose($serv, $client_id, $from_id)
     {
-        $this->log("Event: client[#$client_id@$from_id] close");
+        $clientInfo = $serv->getClientInfo($client_id);
+        $logInfo = sprintf("client_ip[#%s:%s] client[#%s@%s] close", $clientInfo['remote_ip'],
+            $clientInfo['remote_port'], $client_id, $from_id);
+        $this->log($logInfo);
     }
 
     /**
@@ -91,6 +97,7 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
     public function onErrorHandle($errno, $errstr, $errfile, $errline)
     {
         $error = [
+            'errno' => $errno,
             'message' => $errstr,
             'file' => $errfile,
             'line' => $errline,
@@ -134,13 +141,24 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
      */
     public function onRequest(\Swoole\Http\Request $request, \Swoole\Http\Response $response)
     {
+
         // 请求路径
         $pathInfo = $request->server['request_uri'];
+        $client_ip = $request->server['remote_addr'];
+        $client_port = $request->server['remote_port'];
+        $request_method = $request->server['request_method'];
+
+        // 日志
+        $logInfo = sprintf("client_ip[#%s:%s] path [#%s] method[#%s]",
+            $client_ip, $client_port, $pathInfo, $request_method);
+
+        $this->log->info($logInfo);
+
         $params = [];
         try {
             $projectConfig = \Swoole\Swoole::$php->config['project'];
-            $ctrlName = $projectConfig['default_ctrl_name'] ?? 'IndexController';
-            $methodName = $projectConfig['default_method_name'] ?? 'index';
+            $ctrlName = $projectConfig['default_ctrl_name'] ?? 'DefaultController';
+            $methodName = $projectConfig['default_method_name'] ?? 'notFound';
 
             if (!empty($pathInfo) && '/' !== $pathInfo) {
                 $routeMap = Route::match(\Swoole\Swoole::$php->config['route'] ?? false, $pathInfo);
@@ -154,18 +172,31 @@ class HttpServer extends Base implements \Swoole\IFace\Protocol
                     }
                 }
             }
-            Request::init($ctrlName, $methodName, $params);
-            Request::setRequest($request);
-            Response::setResponse($response);
 
+            // 基本数据初始化
+            Request::init($ctrlName, $methodName, $params);
+
+            // set headers
+            Request::addHeaders($request->header);
+
+            // set request
+            Request::setRequest($request);
+
+            // set response
+            Response::setResponse($response);
             $view = \Swoole\Core\Route::route();
             $response->status(200);
             $response->end($view);
         } catch (\Exception $e) {
             $response->status(500);
-            $response->end($e->getMessage());
+            $this->error([
+                'errno' => $e->getCode(),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            $response->end("server is Error");
         }
-
         $this->server->close($request->fd);
     }
 

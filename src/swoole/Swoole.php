@@ -43,7 +43,7 @@ class Swoole
             throw new NotFound("define APPPATH");
         }
 
-        $this->config = new Config;
+        $this->config = new \Swoole\Core\Config;
         $this->config->setPath(self::$app_path . '/config');
     }
 
