@@ -235,7 +235,7 @@ class Server
      */
     public function onMasterStart($serv)
     {
-        \Swoole\Console::setProcessName($this->getProcessName()
+        \Swoole\Core\Console::setProcessName($this->getProcessName()
             . ': master -host=' . $this->host . ' -port=' . $this->port);
         if (!empty($this->runtimeSetting['pid_file'])) {
             file_put_contents(self::$pidFile, $serv->master_pid);
@@ -286,9 +286,9 @@ class Server
         }
 
         if ($worker_id >= $serv->setting['worker_num']) {
-            \Swoole\Console::setProcessName($this->getProcessName() . ': task');
+            \Swoole\Core\Console::setProcessName($this->getProcessName() . ': task');
         } else {
-            \Swoole\Console::setProcessName($this->getProcessName() . ': worker');
+            \Swoole\Core\Console::setProcessName($this->getProcessName() . ': worker');
         }
         if (method_exists($this->protocol, 'onStart')) {
             $this->protocol->onStart($serv, $worker_id);
@@ -327,7 +327,7 @@ class Server
         }
         $this->sw->set($this->runtimeSetting);
         $this->sw->on('ManagerStart', function ($serv) {
-            \Swoole\Console::setProcessName($this->getProcessName() . ': manager');
+            \Swoole\Core\Console::setProcessName($this->getProcessName() . ': manager');
         });
         $this->sw->on('Start', [$this, 'onMasterStart']);
         $this->sw->on('Shutdown', [$this, 'onMasterStop']);

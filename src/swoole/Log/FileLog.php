@@ -9,7 +9,7 @@
 namespace Swoole\Log;
 
 
-class FileLog extends \Swoole\Log implements \Swoole\IFace\Log
+class FileLog extends \Swoole\Core\Log implements \Swoole\IFace\Log
 {
     protected $log_file;
     protected $log_dir;

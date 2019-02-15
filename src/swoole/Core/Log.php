@@ -6,7 +6,7 @@
  * Time: 17:06
  */
 
-namespace Swoole;
+namespace Swoole\Core;
 
 /**
  * Class Log

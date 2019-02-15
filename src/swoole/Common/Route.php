@@ -28,7 +28,8 @@ class Route
         if (isset($route['static'][$pathInfo])) {
             return $route['static'][$pathInfo];
         }
-        foreach ($route['dynamic'] as $regex => $rule) {
+        $dynamic = $route['dynamic'] ?? [];
+        foreach ($dynamic as $regex => $rule) {
             if (!preg_match($regex, $pathInfo, $matches)) {
                 continue;
             }

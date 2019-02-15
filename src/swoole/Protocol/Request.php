@@ -18,7 +18,7 @@ class Request
     const REQUEST_TIME_KEY = 'X-Request-Time';
 
     private static $_params;
-    private static $_ctrl = 'IndexController';
+    private static $_ctrl = 'DefaultController';
     private static $_method = 'index';
     private static $_view_mode = null;
     private static $_is_http = 1;
@@ -458,6 +458,7 @@ class Request
     }
 
     /**
+     * 获得 HTTP 方式
      * @return string
      */
     public static function getHttpMethod()

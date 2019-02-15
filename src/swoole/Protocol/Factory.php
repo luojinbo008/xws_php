@@ -13,12 +13,13 @@ class Factory
 {
     /**
      * @param string $adapter
+     * @param null $params
      * @return mixed
      * @throws \Swoole\Exception\NotFound
      */
-    public static function getInstance($adapter = 'HttpServer')
+    public static function getInstance($adapter = 'HttpServer', $params = null)
     {
         $className = __NAMESPACE__ . "\\Adapter\\{$adapter}";
-        return CFactory::getInstance($className);
+        return CFactory::getInstance($className, $params);
     }
 }

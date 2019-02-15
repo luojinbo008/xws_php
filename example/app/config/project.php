@@ -8,5 +8,5 @@
 
 return [
     "ctrl" => "\\App\\Controller",
-    "view_mode" => "Php"
+    "view_mode" => "Json"
 ];
