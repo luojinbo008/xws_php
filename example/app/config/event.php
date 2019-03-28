@@ -6,8 +6,7 @@
  * Time: 18:22
  */
 $event['master'] = [
-    'type' => Swoole\Queue\MsgQ::class,
-    'msgid' => 1,
+    'type' => Swoole\Queue\Redis::class,
     'async' => true,
 ];
 return $event;

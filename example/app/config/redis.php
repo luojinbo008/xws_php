@@ -8,10 +8,10 @@
 return [
     'master' => [
         'serverInfo' => [
-            'host'      => '127.0.0.1',
+            'host'      => 'myredis',
             'port'      => 6379,
             'timeout'   => 3
         ],
-        'conns' =>10,
+        'conns' => 10,
     ]
 ];

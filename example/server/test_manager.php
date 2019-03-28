@@ -19,13 +19,18 @@ require dirname(__DIR__) . '/../example/bootstrap/init.php';
 Swoole\Core\Config::$debug = false;
 
 // 设置PID文件的存储路径
-Swoole\Network\Server::setPidFile(__DIR__ . '/http_svr.pid');
-
+Swoole\Core\Master::setPidFile(__DIR__ . '/manager.pid');
 /**
  * 显示Usage界面
  * php app_server.php start|stop|reload
  */
-Swoole\Network\Server::start(function () {
+Swoole\Core\Master::start(function () {
+
+    $event = new \Swoole\Network\Event();
+    $event->eventName = 'event';
+    $event->run();
+
+}, function () {
 
     $AppSvr = Swoole\Protocol\Factory::getInstance("HttpServer", [
         'server' => [
@@ -40,13 +45,17 @@ Swoole\Network\Server::start(function () {
         "date"  => true,
         "leave" => \Swoole\Core\Log::INFO
     ]));
-    $server = Swoole\Network\Server::autoCreate('0.0.0.0', 8888);
-    $server->setProtocol($AppSvr);
 
-    // $server->daemonize();  // 作为守护进程
+    $server = Swoole\Network\Server::autoCreate('0.0.0.0', 80);
+    $server->setProtocol($AppSvr);
+    $server->daemonize();  // 作为守护进程
+
     $server->run([
         'worker_num' => 8,
         'max_request' => 5000,
         'log_file' => '/tmp/swoole.log'
     ]);
+
 });
+
+

@@ -1,5 +1,5 @@
 /vendor/
-commposer.lock
+*.lock
 *.iml
 .idea/
 *.pid

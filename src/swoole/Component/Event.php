@@ -10,9 +10,13 @@ namespace Swoole\Component;
 
 use Swoole\IFace;
 use Swoole\Exception;
+use Swoole\Core\Master;
 
 class Event
 {
+
+    public $master_pid;
+
     /**
      * @var IFace\Queue
      */
@@ -27,6 +31,9 @@ class Event
 
     protected $config;
     protected $async = false;
+
+    protected $startFunc;
+    protected $stopFunc;
 
     public function __construct($config)
     {
@@ -63,6 +70,7 @@ class Event
             }
             $this->_handles[$type] = $handlers;
         }
+
         foreach ($this->_handles[$type] as $handler) {
 
             /**
@@ -120,6 +128,7 @@ class Event
      */
     public function runWorker($worker_num = 1, $daemon = false)
     {
+
         if ($worker_num > 1 or $daemon) {
             if (!class_exists('\swoole\process')) {
                 throw new Exception\NotFound("require swoole extension");
@@ -128,7 +137,11 @@ class Event
                 $worker_num = 200;
             }
         } else {
+            $this->master_pid = posix_getpid();
 
+            if ($this->startFunc) {
+                call_user_func($this->startFunc, $this);
+            }
             $this->_atomic = new \swoole_atomic(1);
             $this->_worker();
             return;
@@ -139,6 +152,13 @@ class Event
         }
 
         $this->_atomic = new \swoole_atomic(1);
+
+        // 必须写在这里
+        $this->master_pid = posix_getpid();
+
+        if ($this->startFunc) {
+            call_user_func($this->startFunc, $this);
+        }
         for ($i = 0; $i < $worker_num; $i++) {
             $process = new \swoole\process([$this, '_worker'], false, false);
             $process->start();
@@ -168,11 +188,28 @@ class Event
         });
 
         \swoole_process::signal(SIGTERM, function () {
-            // 停止运行
             $this->_atomic->set(0);
+            foreach ($this->_workers as $k => $p) {
+                \swoole_process::kill($p->pid);
+            }
+
+            // 停止运行
+            if ($this->stopFunc) {
+                call_user_func($this->stopFunc, $this);
+            }
         });
     }
 
+    public function onStop($func)
+    {
+        $this->stopFunc = $func;
+    }
+
+
+    public function onStart($func)
+    {
+        $this->startFunc = $func;
+    }
     /**
      * @return IFace\Queue
      * @throws Exception\NotFound
