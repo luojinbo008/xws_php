@@ -8,53 +8,35 @@
 
 namespace Swoole\Network;
 
+use Swoole\Core\Master;
 use Swoole\Protocol\Request;
 
 class Server
 {
     public $protocol;
-
     public static $isHttp = false;
 
     public $host = '0.0.0.0';
     public $port;
     public $flag;
+
     protected $processName;
-
-    protected static $beforeStopCallback;
-    protected static $beforeReloadCallback;
-
     public static $swooleMode;
-    public static $optionKit;
-    public static $pidFile;
-
-    public static $defaultOptions = [
-        'd|daemon' => '启用守护进程模式',
-        'h|host?' => '指定监听地址',
-        'p|port?' => '指定监听端口',
-        'help' => '显示帮助界面',
-        'b|base' => '使用BASE模式启动',
-        'w|worker?' => '设置Worker进程的数量',
-        'r|thread?' => '设置Reactor线程的数量',
-        't|tasker?' => '设置Task进程的数量',
-    ];
 
     /**
      * @var \swoole_server
      */
     protected $sw;
-    protected $pid_file;
 
     public static $swoole;
-    public static $options;
 
     /**
-     * 设置PID文件
-     * @param $pidFile
+     * @param $processName
+     * @return mixed
      */
-    public static function setPidFile($pidFile)
+    public function setProcessName($processName)
     {
-        self::$pidFile = $pidFile;
+        return $this->processName = $processName;
     }
 
     /**
@@ -81,112 +63,6 @@ class Server
     {
         $cmd = 'ps -eaf |grep "' . $name . '" | grep -v "grep"| awk "{print $2}"|xargs kill -' . $signo;
         return exec($cmd);
-    }
-
-    /**
-     *
-     * $opt->add( 'f|foo:' , 'option requires a value.' );
-     * $opt->add( 'b|bar+' , 'option with multiple value.' );
-     * $opt->add( 'z|zoo?' , 'option with optional value.' );
-     * $opt->add( 'v|verbose' , 'verbose message.' );
-     * $opt->add( 'd|debug'   , 'debug message.' );
-     * $opt->add( 'long'   , 'long option name only.' );
-     * $opt->add( 's'   , 'short option name only.' );
-     *
-     * @param $specString
-     * @param $description
-     * @throws ServerOptionException
-     */
-    public static function addOption($specString, $description)
-    {
-        if (!self::$optionKit) {
-            self::$optionKit = new \GetOptionKit\GetOptionKit;
-        }
-        foreach (self::$defaultOptions as $k => $v) {
-            if ($k[0] == $specString[0]) {
-                throw new ServerOptionException("不能添加系统保留的选项名称");
-            }
-        }
-        self::$optionKit->add($specString, $description);
-    }
-
-    /**
-     * @param callable $function
-     */
-    public static function beforeStop(callable $function)
-    {
-        self::$beforeStopCallback = $function;
-    }
-
-    /**
-     * @param callable $function
-     */
-    public static function beforeReload(callable $function)
-    {
-        self::$beforeReloadCallback = $function;
-    }
-
-    /**
-     * 显示命令行指令
-     * @param $startFunction
-     * @throws \Exception
-     */
-    public static function start($startFunction)
-    {
-        if (empty(self::$pidFile)) {
-            throw new \Exception("require pidFile.");
-        }
-        $pid_file = self::$pidFile;
-        if (is_file($pid_file)) {
-            $server_pid = file_get_contents($pid_file);
-        } else {
-            $server_pid = 0;
-        }
-
-        if (!self::$optionKit) {
-            self::$optionKit = new \GetOptionKit\GetOptionKit;
-        }
-
-        $kit = self::$optionKit;
-        foreach (self::$defaultOptions as $k => $v) {
-            $kit->add($k, $v);
-        }
-        global $argv;
-        $opt = $kit->parse($argv);
-        if (empty($argv[1]) or isset($opt['help'])) {
-            goto usage;
-        } elseif ($argv[1] == 'reload') {
-            if (empty($server_pid)) {
-                exit("Server is not running");
-            }
-            if (self::$beforeReloadCallback) {
-                call_user_func(self::$beforeReloadCallback, $opt);
-            }
-            \Swoole\Swoole::$php->os->kill($server_pid, SIGUSR1);
-            exit;
-        } elseif ($argv[1] == 'stop') {
-            if (empty($server_pid)) {
-                exit("Server is not running\n");
-            }
-            if (self::$beforeStopCallback) {
-                call_user_func(self::$beforeStopCallback, $opt);
-            }
-            \Swoole\Swoole::$php->os->kill($server_pid, SIGTERM);
-            exit;
-        } elseif ($argv[1] == 'start') {
-
-            // 已存在ServerPID，并且进程存在
-            if (!empty($server_pid) and \Swoole\Swoole::$php->os->kill($server_pid, 0)) {
-                exit("Server is already running.\n");
-            }
-        } else {
-            usage:
-            echo ("php {$argv[0]} start|stop|reload\n");
-            $kit->specs->printOptions();
-            exit("\n");
-        }
-        self::$options = $opt;
-        $startFunction($opt);
     }
 
     /**
@@ -237,9 +113,7 @@ class Server
     {
         \Swoole\Core\Console::setProcessName($this->getProcessName()
             . ': master -host=' . $this->host . ' -port=' . $this->port);
-        if (!empty($this->runtimeSetting['pid_file'])) {
-            file_put_contents(self::$pidFile, $serv->master_pid);
-        }
+        Master::addPid($serv->master_pid);
         if (method_exists($this->protocol, 'onMasterStart')) {
             $this->protocol->onMasterStart($serv);
         }
@@ -250,9 +124,7 @@ class Server
      */
     public function onMasterStop($serv)
     {
-        if (!empty($this->runtimeSetting['pid_file'])) {
-            unlink(self::$pidFile);
-        }
+        Master::removePid($serv->master_pid);
         if (method_exists($this->protocol, 'onMasterStop')) {
             $this->protocol->onMasterStop($serv);
         }
@@ -310,21 +182,7 @@ class Server
         }
 
         $this->runtimeSetting = array_merge($this->runtimeSetting, $setting);
-        if (self::$pidFile) {
-            $this->runtimeSetting['pid_file'] = self::$pidFile;
-        }
-        if (!empty(self::$options['daemon'])) {
-            $this->runtimeSetting['daemonize'] = true;
-        }
-        if (!empty(self::$options['worker'])) {
-            $this->runtimeSetting['worker_num'] = intval(self::$options['worker']);
-        }
-        if (!empty(self::$options['thread'])) {
-            $this->runtimeSetting['reator_num'] = intval(self::$options['thread']);
-        }
-        if (!empty(self::$options['tasker'])) {
-            $this->runtimeSetting['task_worker_num'] = intval(self::$options['tasker']);
-        }
+
         $this->sw->set($this->runtimeSetting);
         $this->sw->on('ManagerStart', function ($serv) {
             \Swoole\Core\Console::setProcessName($this->getProcessName() . ': manager');
@@ -416,6 +274,7 @@ class Server
         ];
         self::$swoole->task($params);
     }
+
 
     /**
      * @param $func

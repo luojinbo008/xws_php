@@ -9,6 +9,6 @@ return [
     "master" => [
         "type"  => 'EchoLog',
         "date"  => true,
-        "leave" => \Swoole\Log::INFO
+        "leave" => \Swoole\Core\Log::INFO
     ]
 ];

@@ -23,4 +23,4 @@ go(function () {
     ]);
 });
 
-Swoole\Swoole::$php->event->runWorker(1, false);
+Swoole\Swoole::$php->event->runWorker(1, true);
